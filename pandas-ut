@@ -1,0 +1,100 @@
+import pandas as pd
+import tkinter as tk
+import numpy as np
+import re
+import pyexcel as p
+import sys
+import math
+from tkinter import *
+from tkinter import ttk
+from tkinter import filedialog
+from ortools.linear_solver import pywraplp
+from fractions import Fraction
+
+#required before we can ask for input file
+root = tk.Tk()
+root.withdraw()
+
+gui = Tk()
+gui.geometry("400x150")
+gui.title("UT Mat Order")
+gui.columnconfigure(0, weight=3)
+gui.columnconfigure(1, weight=1)
+
+folderPath = StringVar()
+filePath = StringVar()
+
+class FolderSelect(Frame):
+    def __init__(self,parent=None,folderDescription="",**kw):
+        Frame.__init__(self,master=parent,**kw)
+        self.folderPath = StringVar()
+        self.lblName = Label(self, text=folderDescription)
+        self.lblName.grid(row=0,column=0, sticky="ew", pady=1)
+        self.entPath = Entry(self, textvariable=self.folderPath)
+        self.entPath.grid(row=1,column=0, sticky="ew", pady=1)
+        self.btnFind = ttk.Button(self, text="Select Folder",command=self.setFolderPath)
+        self.btnFind.grid(row=1,column=1, pady=1)
+    def setFolderPath(self):
+        folder_selected = filedialog.askdirectory()
+        self.folderPath.set(folder_selected)
+        self.entPath.insert(0,folder_selected)
+    @property
+    def folder_path(self):
+        self.entPath.update()
+        return self.folderPath.get()
+    
+class FileSelect(Frame):
+    def __init__(self,parent=None,folderDescription="",**kw):
+        Frame.__init__(self,master=parent,**kw)
+        self.filePath = StringVar()
+        self.lblName = Label(self, text=folderDescription)
+        self.lblName.grid(row=0,column=0, sticky="ew", pady=1)
+        self.entPath = Entry(self, textvariable=self.filePath)
+        self.entPath.grid(row=1,column=0, sticky="ew", pady=1)
+        self.btnFind = ttk.Button(self, text="Select File",command=self.setFilePath)
+        self.btnFind.grid(row=1,column=1, pady=1)
+    def setFilePath(self):
+        file_selected = filedialog.askopenfilename()
+        self.filePath.set(file_selected)
+        self.entPath.insert(0,file_selected)
+    @property
+    def file_path(self):
+        self.entPath.update()
+        return self.filePath.get()
+        
+
+def doStuff():
+    global excel_file
+    global output_directory
+    excel_file = file1Select.file_path
+    output_directory = directory1Select.folder_path
+    root.quit()
+
+def endProgram():
+    sys.exit()
+
+
+file1Select = FileSelect(gui,"Excel BOM File:")
+file1Select.grid(row=0)
+
+directory1Select = FolderSelect(gui,"Order File Output Folder:")
+directory1Select.grid(row=1)
+
+c = ttk.Button(gui, text="RUN", command=doStuff)
+c.grid(row=4,column=0, pady=1)
+e = ttk.Button(gui, text="EXIT", command=endProgram)
+e.grid(row=4,column=1, pady=1)
+gui.mainloop()
+
+if excel_file[len(excel_file)-1] == "s":
+        p.save_book_as(file_name=excel_file,
+               dest_file_name=excel_file + "x")
+        excel_file = excel_file + "x"
+
+df = pd.read_excel(excel_file, sheet_name=0, header=[1], dtype_backend="pyarrow")
+dfOrder = df.groupby(['STOCK CODE'])['ROUNDED'].sum(numeric_only=True).reset_index()
+dfOrder['+0.01'] = dfOrder['ROUNDED'] + 0.01
+dfOrder['QUANTITY ORDER'] = np.ceil(dfOrder['+0.01'])
+dfOrder = dfOrder.drop('ROUNDED', axis=1)
+dfOrder = dfOrder.drop('+0.01', axis=1)
+dfOrder.to_excel(output_directory + "//" + " python output.xlsx", sheet_name="Sheet 1")
