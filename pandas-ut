@@ -93,6 +93,7 @@ if excel_file[len(excel_file)-1] == "s":
 
 df = pd.read_excel(excel_file, sheet_name=0, header=[1], dtype_backend="pyarrow")
 dfOrder = df.groupby(['STOCK CODE'])['ROUNDED'].sum(numeric_only=True).reset_index()
+dfOrder = dfOrder.drop(dfOrder[dfOrder['TOTAL QTY'] == 0].index)
 dfOrder['+0.01'] = dfOrder['ROUNDED'] + 0.01
 dfOrder['QUANTITY ORDER'] = np.ceil(dfOrder['+0.01'])
 dfOrder = dfOrder.drop('ROUNDED', axis=1)
