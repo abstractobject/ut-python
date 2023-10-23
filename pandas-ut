@@ -91,7 +91,14 @@ if excel_file[len(excel_file)-1] == "s":
                dest_file_name=excel_file + "x")
         excel_file = excel_file + "x"
 
-df = pd.read_excel(excel_file, sheet_name=0, header=[1], dtype_backend="pyarrow")
+df = pd.read_excel(excel_file, sheet_name="LINEAR LIBARY (ORDER)", header=[1], dtype_backend="pyarrow")
+dfDict = pd.read_excel(excel_file, sheet_name="ONCOR I.D.'S", header=[0], dtype_backend="pyarrow")
+dfDict = dfDict.fillna(0)
+dict = dfDict.set_index('ID').T.to_dict('list')
+df['ID QTY'] = df['ID'].map(dict)
+df['ID QTY'] = df['ID QTY'].apply(lambda x:x[0])
+df = df.drop(df[df['TOTAL QTY'] == 0].index)
+df.to_excel(output_directory + "//" + " test df.xlsx", sheet_name="Sheet 1")
 dfOrder = df.groupby(['STOCK CODE'])['ROUNDED'].sum(numeric_only=True).reset_index()
 dfOrder['+0.01'] = dfOrder['ROUNDED'] + 0.01
 dfOrder['QUANTITY ORDER'] = np.ceil(dfOrder['+0.01'])
