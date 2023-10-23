@@ -100,6 +100,7 @@ df['ID QTY'] = df['ID QTY'].apply(lambda x:x[0])
 df = df.drop(df[df['TOTAL QTY'] == 0].index)
 df.to_excel(output_directory + "//" + " test df.xlsx", sheet_name="Sheet 1")
 dfOrder = df.groupby(['STOCK CODE'])['ROUNDED'].sum(numeric_only=True).reset_index()
+dfOrder = dfOrder.drop(dfOrder[dfOrder['TOTAL QTY'] == 0].index)
 dfOrder['+0.01'] = dfOrder['ROUNDED'] + 0.01
 dfOrder['QUANTITY ORDER'] = np.ceil(dfOrder['+0.01'])
 dfOrder = dfOrder.drop('ROUNDED', axis=1)
