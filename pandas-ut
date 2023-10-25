@@ -109,7 +109,7 @@ for key in dict:
     tempDF = tempDF.drop(tempDF[tempDF['TOTAL QTY'] == 0].index)
     tempDF['TOTAL ID PART LENGTH'] = tempDF['TOTAL LENGTH PER ID'] * tempDF['ID QTY']
     tempDF['PERCENT USED'] = tempDF['TOTAL LENGTH PER ID'] / tempDF['STOCK LENGTH']
-    tempDF['ROUNDED'] = tempDF.apply(lambda x:(math.ceil(x['PERCENT USED']*4)/4),axis=1)
+    tempDF['ROUNDED'] = tempDF['PERCENT USED'].apply(lambda x:(math.ceil(x*4)/4))
     tempDF['PROJECT'] = key
     outputDF.append(tempDF)
 outputDF = pd.concat(outputDF, ignore_index=True)
