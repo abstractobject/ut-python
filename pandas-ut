@@ -101,7 +101,7 @@ dict = dfDict.set_index('ID').T.to_dict('series')
 ###
 #  APPLY ID QUANTITIES AND PROJECT NAMES TO LIBRARY
 ###
-outputDF = []
+outputList = []
 for key in dict:
     tempDF = df.copy(deep=True)
     tempDF['ID QTY'] = tempDF['ID'].map(dict[key])
@@ -111,8 +111,9 @@ for key in dict:
     tempDF['PERCENT USED'] = tempDF['TOTAL LENGTH PER ID'] / tempDF['STOCK LENGTH']
     tempDF['ROUNDED'] = tempDF['PERCENT USED'].apply(lambda x:(math.ceil(x*4)/4))
     tempDF['PROJECT'] = key
-    outputDF.append(tempDF)
-outputDF = pd.concat(outputDF, ignore_index=True)
+    outputList.append(tempDF)
+outputList.pop(0)
+outputDF = pd.concat(outputList, ignore_index=True)
 
 ###
 #  GET ORDER QUANTITY PER MATERIAL ACROSS ALL PROJECTS
