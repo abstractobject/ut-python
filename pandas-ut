@@ -112,7 +112,6 @@ for key in dict:
     tempDF['ROUNDED'] = tempDF['PERCENT USED'].apply(lambda x:(math.ceil(x*4)/4))
     tempDF['PROJECT'] = key
     outputList.append(tempDF)
-outputList.pop(0)
 outputDF = pd.concat(outputList, ignore_index=True)
 outputDF.to_excel(output_directory + "//" + " dfOrder.xlsx", sheet_name="Sheet 1")
 
