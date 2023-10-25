@@ -91,18 +91,46 @@ if excel_file[len(excel_file)-1] == "s":
                dest_file_name=excel_file + "x")
         excel_file = excel_file + "x"
 
+###
+#  GET LIBRARY DATA AND ONCOR ID / PROJECTS DATA
+###
 df = pd.read_excel(excel_file, sheet_name="LINEAR LIBARY (ORDER)", header=[1], dtype_backend="pyarrow")
 dfDict = pd.read_excel(excel_file, sheet_name="ONCOR I.D.'S", header=[0], dtype_backend="pyarrow")
-dfDict = dfDict.fillna(0)
-dict = dfDict.set_index('ID').T.to_dict('list')
-df['ID QTY'] = df['ID'].map(dict)
-df['ID QTY'] = df['ID QTY'].apply(lambda x:x[0])
-df = df.drop(df[df['TOTAL QTY'] == 0].index)
-df.to_excel(output_directory + "//" + " test df.xlsx", sheet_name="Sheet 1")
-dfOrder = df.groupby(['STOCK CODE'])['ROUNDED'].sum(numeric_only=True).reset_index()
-dfOrder = dfOrder.drop(dfOrder[dfOrder['TOTAL QTY'] == 0].index)
+dict = dfDict.set_index('ID').T.to_dict('series')
+
+###
+#  APPLY ID QUANTITIES AND PROJECT NAMES TO LIBRARY
+###
+outputDF = []
+for key in dict:
+    tempDF = df.copy(deep=True)
+    tempDF['ID QTY'] = tempDF['ID'].map(dict[key])
+    tempDF['TOTAL QTY'] = tempDF['QTY PER ID'] * tempDF['ID QTY']
+    tempDF = tempDF.drop(tempDF[tempDF['TOTAL QTY'] == 0].index)
+    tempDF['TOTAL ID PART LENGTH'] = tempDF['TOTAL LENGTH PER ID'] * tempDF['ID QTY']
+    tempDF['PERCENT USED'] = tempDF['TOTAL LENGTH PER ID'] / tempDF['STOCK LENGTH']
+    tempDF['ROUNDED'] = tempDF.apply(lambda x:(math.ceil(x['PERCENT USED']*4)/4),axis=1)
+    tempDF['PROJECT'] = key
+    outputDF.append(tempDF)
+outputDF = pd.concat(outputDF, ignore_index=True)
+
+###
+#  GET ORDER QUANTITY PER MATERIAL ACROSS ALL PROJECTS
+###
+dfOrder = outputDF.groupby(['STOCK CODE'])['ROUNDED'].sum(numeric_only=True).reset_index()
 dfOrder['+0.01'] = dfOrder['ROUNDED'] + 0.01
 dfOrder['QUANTITY ORDER'] = np.ceil(dfOrder['+0.01'])
 dfOrder = dfOrder.drop('ROUNDED', axis=1)
 dfOrder = dfOrder.drop('+0.01', axis=1)
-dfOrder.to_excel(output_directory + "//" + " python output.xlsx", sheet_name="Sheet 1")
+dfOrder.to_excel(output_directory + "//" + " UT Linear Order.xlsx", sheet_name="Sheet 1")
+
+###
+#  GET ALLOCATION QUANTITY PER PROJECT
+###
+writer = pd.ExcelWriter(output_directory + "//" + " UT Linear Allocation.xlsx")
+dfAllocate = outputDF.groupby(['STOCK CODE', 'PROJECT'])['ROUNDED'].sum(numeric_only=True).reset_index()
+for group, StationGroup in dfAllocate.groupby(['PROJECT']):
+    StationGroup = StationGroup[['STOCK CODE', 'ROUNDED', 'PROJECT']]
+    StationGroup.rename(columns = {'ROUNDED':'ALLOCATE'}, inplace=True)
+    StationGroup.to_excel(writer, sheet_name=StationGroup.iloc[0,2])
+writer.close()
