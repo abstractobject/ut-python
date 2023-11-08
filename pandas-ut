@@ -112,8 +112,14 @@ for key in dict:
     tempDF['ROUNDED'] = tempDF['PERCENT USED'].apply(lambda x:(math.ceil(x*4)/4))
     tempDF['ROUNDDOWN'] = tempDF.apply(lambda row:(math.floor(row['STOCK LENGTH']/row['LENGTH2'])), axis=1)
     tempDF['MINIMUM STOCK'] = tempDF['TOTAL QTY'] / tempDF['ROUNDDOWN']
+    tempDF['DROP SIZE'] = 0
+    maskDF = tempDF[tempDF['ROUNDDOWN'] == 1]
+    tempDF = tempDF[tempDF['ROUNDDOWN'] != 1]
+    maskDF['DROP SIZE'] = maskDF['STOCK LENGTH'] - maskDF['LENGTH2']
     tempDF['PROJECT'] = key
+    maskDF['PROJECT'] = key
     outputList.append(tempDF)
+    outputList.append(maskDF)
 outputDF = pd.concat(outputList, ignore_index=True)
 outputDF.to_excel(output_directory + "//" + " dfOrder.xlsx", sheet_name="Sheet 1")
 
@@ -124,7 +130,6 @@ dfOrder = outputDF.groupby(['STOCK CODE'])[['ROUNDED', 'MINIMUM STOCK']].sum(num
 dfOrder['STICKS'] = dfOrder[['ROUNDED', 'MINIMUM STOCK']].max(axis=1)
 dfOrder['+0.01'] = dfOrder['STICKS'] + 0.01
 dfOrder['QUANTITY ORDER'] = np.ceil(dfOrder['+0.01'])
-print(dfOrder)
 dfOrder = dfOrder.drop('ROUNDED', axis=1)
 dfOrder = dfOrder.drop('STICKS', axis=1)
 dfOrder = dfOrder.drop('MINIMUM STOCK', axis=1)
