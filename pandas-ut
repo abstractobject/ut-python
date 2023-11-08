@@ -110,12 +110,14 @@ for key in dict:
     tempDF['TOTAL LENGTH TOTAL QTY'] = tempDF['PART LENGTH PER ID'] * tempDF['ID QTY']
     tempDF['PERCENT USED'] = tempDF['TOTAL LENGTH TOTAL QTY'] / tempDF['STOCK LENGTH']
     tempDF['ROUNDED'] = tempDF['PERCENT USED'].apply(lambda x:(math.ceil(x*4)/4))
-    tempDF['ROUNDDOWN'] = tempDF.apply(lambda row:(math.floor(row['STOCK LENGTH']/row['LENGTH2'])), axis=1)
-    tempDF['MINIMUM STOCK'] = tempDF['TOTAL QTY'] / tempDF['ROUNDDOWN']
+    tempDF['PARTS PER STICK'] = tempDF.apply(lambda row:(math.floor(row['STOCK LENGTH']/row['LENGTH2'])), axis=1)
+    tempDF['MINIMUM STOCK'] = tempDF['TOTAL QTY'] / tempDF['PARTS PER STICK']
     tempDF['DROP SIZE'] = 0
-    maskDF = tempDF[tempDF['ROUNDDOWN'] == 1]
-    tempDF = tempDF[tempDF['ROUNDDOWN'] != 1]
+    tempDF['DROP QTY'] = 0
+    maskDF = tempDF[tempDF['PARTS PER STICK'] == 1]
+    tempDF = tempDF[tempDF['PARTS PER STICK'] != 1]
     maskDF['DROP SIZE'] = maskDF['STOCK LENGTH'] - maskDF['LENGTH2']
+    maskDF['DROP QTY'] = maskDF['MINIMUM STOCK']
     tempDF['PROJECT'] = key
     maskDF['PROJECT'] = key
     outputList.append(tempDF)
