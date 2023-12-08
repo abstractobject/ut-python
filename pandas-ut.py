@@ -127,8 +127,7 @@ outputDF.to_excel(output_directory + "//" + " dfOrder.xlsx", sheet_name="Sheet 1
 #  PREP DATA AND NEST USING CP-SAT SOLVER
 ###
 nestDF = outputDF.copy(deep=True)
-nestDF['LENGTH2'] = nestDF['LENGTH2'].apply(lambda x: x*10000)
-nestDF['LENGTH2'] = nestDF.apply(lambda row:(row['LENGTH2'] + 1250) if row['PARTS PER STICK'] != 1 else row['LENGTH2'], axis=1)
+nestDF['LENGTH2'] = nestDF['LENGTH2'].apply(lambda x: x*1000)
 nestDF = nestDF.loc[nestDF.index.repeat(nestDF['TOTAL QTY'])].reset_index(drop=True)
 
 NestWorksetDataFrame = []
@@ -141,7 +140,7 @@ def create_data_model():
     data['items'] = list(range(len(data['weights'])))
     data['bins'] = data['items']
     # stick size
-    data['bin_capacity'] = dfMatType.iloc[0, 12] * 10000
+    data['bin_capacity'] = dfMatType.iloc[0, 12] * 1000
     data['material'] = dfMatType.iloc[0, 1]
     data['stock-code'] = dfMatType.iloc[0, 0]
     return data
@@ -195,7 +194,7 @@ for group, dfMatType in nestDF.groupby(['STOCK CODE', 'STOCK LENGTH']):
                         bin_items.append(i)
                         # stick usage
                         bin_weight += data['weights'][i]
-                        CutTicketDictionary = {'PART': dfMatType.iloc[i,2], 'QTY': 1, 'STOCK CODE': data['stock-code'], 'MAT. DESCRIPTION': data['material'], 'LENGTH': dfMatType.iloc[i,4], 'ID': dfMatType.iloc[i,7], 'NESTED LENGTH': (data['weights'][i])/10000, 'STICK': j}
+                        CutTicketDictionary = {'PART': dfMatType.iloc[i,2], 'QTY': 1, 'STOCK CODE': data['stock-code'], 'MAT. DESCRIPTION': data['material'], 'LENGTH': dfMatType.iloc[i,4], 'ID': dfMatType.iloc[i,7], 'NESTED LENGTH': (data['weights'][i])/1000, 'STICK': j}
                         # List of parts to dataframe
                         CutTicketDictionaryDataFrame = pd.DataFrame(data=CutTicketDictionary, index=[0])
                         # Add the parts to the overall list
